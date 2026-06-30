@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.services.expense_service import procesar_mensaje
 from app.integrations.whatsapp_client import enviar_mensaje_whatsapp
 
+MENSAJES_PROCESADOS: set[str] = set()
 router = APIRouter()
 
 @router.get("/webhook")
@@ -42,6 +43,13 @@ async def recibir_mensaje(request: Request, db: Session = Depends(get_db)):
             return {"status": "ignorado"}
 
         mensaje = valor["messages"][0]
+        mensaje_id = mensaje["id"]
+
+        if mensaje_id in MENSAJES_PROCESADOS:
+            return {"status": "duplicado"}
+
+        MENSAJES_PROCESADOS.add(mensaje_id)
+
         numero_whatsapp = mensaje["from"]
         texto_usuario = mensaje["text"]["body"]
         nombre_usuario = valor["contacts"][0]["profile"]["name"]

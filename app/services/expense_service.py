@@ -28,6 +28,9 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
         return responder_consulta(db, usuario.id, consulta)
 
     extraccion = extraer_gasto(texto)
+    if extraccion.monto is None
+        return "⚠️ No pude identificar el monto. Intenta con algo como 'gasté 200 en comida'."
+
     gasto = crear_gasto(
         db,
         usuario_id=usuario.id,
