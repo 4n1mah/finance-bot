@@ -47,7 +47,7 @@ def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
 Extrae la intención de la pregunta y devuelve SOLO este JSON sin texto adicional:
 {
   "tipo": "total_general" | "por_categoria" | "desglose",
-  "categoria": "Comida" | "Pasaje" | "Cuidado Personal" | "Servicios" | "Salud" | "Salidas" | "Ahorros" | "Pedidos" | "Pagos" | "Otros" | null
+  "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros" | null
 }
 
 Reglas:
