@@ -1,7 +1,8 @@
 from groq import Groq
 from app.core.config import settings
-from app.schemas.gasto_schema import ExtraccionGasto
+from app.schemas.gasto_schema import ExtraccionGasto, ConsultaGasto, TipoConsulta
 from groq.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
+import json
 
 client = Groq(api_key=settings.groq_api_key)
 
@@ -34,6 +35,39 @@ def extraer_gasto(texto_usuario: str) -> ExtraccionGasto:
     contenido_json = respuesta.choices[0].message.content
 
     return ExtraccionGasto.model_validate_json(contenido_json)
+
+def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
+    """
+    Mismo patrón que extraer_gasto() pero para preguntas.
+    Groq decide qué tipo de consulta es y si menciona una categoría.
+    """
+    from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta
+
+    prompt_sistema = """Eres un asistente que analiza preguntas sobre gastos personales.
+Extrae la intención de la pregunta y devuelve SOLO este JSON sin texto adicional:
+{
+  "tipo": "total_general" | "por_categoria" | "desglose",
+  "categoria": "Comida" | "Pasaje" | "Cuidado Personal" | "Servicios" | "Salud" | "Salidas" | "Ahorros" | "Pedidos" | "Pagos" | "Otros" | null
+}
+
+Reglas:
+- Si pregunta por una categoría específica: tipo = "por_categoria" y categoria = la categoría mencionada
+- Si pregunta por el total sin especificar categoría: tipo = "total_general" y categoria = null
+- Si pide un resumen o desglose general: tipo = "desglose" y categoria = null"""
+
+    messages = [
+        ChatCompletionSystemMessageParam(role="system", content=prompt_sistema),
+        ChatCompletionUserMessageParam(role="user", content=texto_usuario),
+    ]
+
+    respuesta = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=messages,
+        response_format={"type": "json_object"},
+    )
+
+    datos = json.loads(respuesta.choices[0].message.content)
+    return ConsultaGasto(**datos)
 
 if __name__ == "__main__":
     resultado = extraer_gasto("gasté 200 pesos en comida hoy")

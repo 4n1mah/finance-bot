@@ -1,8 +1,26 @@
+from enum import Enum
+
 from pydantic import BaseModel, Field
 from app.models.gasto import CategoriaGasto
+from typing import Optional
 
 class ExtraccionGasto(BaseModel):
     monto: float = Field(description="El mondo gastado, como numero positivo")
     categoria: CategoriaGasto = Field(description="La categoria del gasto")
     descripcion: str = Field(description="Breve descripcion de en que se gasto")
+
+class TipoConsulta(str, Enum):
+    """
+    Qué tipo de pregunta está haciendo el usuario.
+    - TOTAL_GENERAL: "¿cuánto gasté en total?"
+    - POR_CATEGORIA: "¿cuánto gasté en comida?"  (necesita categoría específica)
+    - DESGLOSE: "¿en qué gasté?" / "resumen de gastos"
+    """
+    TOTAL_GENERAL = "total_general"
+    POR_CATEGORIA = "por_categoria"
+    DESGLOSE = "desglose"
+
+class ConsultaGasto(BaseModel):
+    tipo: TipoConsulta
+    categoria: Optional[CategoriaGasto] = None
 
