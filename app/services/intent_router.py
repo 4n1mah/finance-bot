@@ -23,41 +23,50 @@ PALABRAS_SALUDO = [
     "buen dia", "buenos dias", "buenas tardes", "buenas noches", "holi", "oye"
 ]
 
-def detectar_intencion(texto_usuario: str) -> Intencion:
+PALABRAS_GASTO = [
+    "gasté", "gaste", "pagué", "pague",
+    "compré", "compre", "costó", "costo",
+]
+
+def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
     """
-    Aplica reglas léxicas simples (no ML, no LLM) para decidir si el
-    mensaje es una pregunta o un registro de gasto.
-
-    Por qué reglas y no Groq: es una decisión barata y rápida (microsegundos,
-    sin costo de API) que no necesita razonamiento complejo. Reservamos el
-    LLM para la parte que sí lo justifica: extraer monto/categoría/descripción
-    de texto libre.
-
-    Estrategia: "innocent until proven question" — si el texto NO contiene
-    ninguna señal de pregunta, asumimos que es un registro de gasto.
-    Esto es seguro para V1 porque V1 solo procesa gastos de todas formas.
+    Ahora devuelve una LISTA de intenciones en vez de una sola.
+    Esto permite procesar mensajes como "Hola, gasté 200 en comida.
+    ¿Cuánto llevo gastado?" que tienen saludo + gasto + pregunta juntos.
     """
     texto_normalizado = texto_usuario.lower().strip()
-
-    if "?" in texto_normalizado:
-        return Intencion.PREGUNTA
-
-    for palabra in PALABRAS_PREGUNTA:
-        if palabra in texto_normalizado:
-            return Intencion.PREGUNTA
+    intenciones = []
 
     for palabra in PALABRAS_SALUDO:
         if palabra in texto_normalizado:
-            return Intencion.SALUDO
+            intenciones.append(Intencion.SALUDO)
+            break
 
-    return Intencion.REGISTRAR_GASTO
+    for palabra in PALABRAS_GASTO:
+        if palabra in texto_normalizado:
+            intenciones.append(Intencion.REGISTRAR_GASTO)
+            break
+
+    if "?" in texto_normalizado:
+        intenciones.append(Intencion.PREGUNTA)
+    else:
+        for palabra in PALABRAS_PREGUNTA:
+            if palabra in texto_normalizado:
+                intenciones.append(Intencion.PREGUNTA)
+                break
+
+    if not intenciones:
+        intenciones.append(Intencion.REGISTRAR_GASTO)
+
+    return intenciones
 
 if __name__ == "__main__":
     pruebas = [
-        "gasté 200 en comida hoy",
+        "hola, gasté 200 en comida hoy",
         "¿cuánto gasté en comida este mes?",
         "cuanto llevo gastado",
         "pague 500 de luz",
+        "hola, gaste 240 en la sirena. cuanto he gastado en comida?",
     ]
     for texto in pruebas:
-        print(f"{texto!r} -> {detectar_intencion(texto)}")
+        print(f"{texto!r} -> {detectar_intenciones(texto)}")
