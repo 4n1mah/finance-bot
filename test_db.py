@@ -1,41 +1,22 @@
 from app.core.database import SessionLocal
-from app.repositories.usuario_repository import crear_usuario, obtener_usuario_por_numero
-from app.repositories.gasto_repository import (
-    crear_gasto,
-    obtener_total_por_categoria,
-    obtener_total_general,
-    obtener_total_por_categoria_especifica,
-    obtener_gastos_detalle,
-)
-from app.models.gasto import CategoriaGasto
-from datetime import datetime, UTC
+from app.services.expense_service import procesar_mensaje
 
 db = SessionLocal()
 
-usuario_existente = obtener_usuario_por_numero(db, "18091234567")
-if usuario_existente is None:
-    usuario_prueba = crear_usuario(db, nombre="Sadiel", numero_whatsapp="18091234567")
-    print("Usuario creado:", usuario_prueba.id, usuario_prueba.nombre)
-else:
-    usuario_prueba = usuario_existente
-    print("Usuario ya existía:", usuario_prueba.id, usuario_prueba.nombre)
+# Número de prueba distinto al que ya usaste en test_db.py, para no
+# mezclar resultados con el usuario "Sadiel" que ya creaste ahí.
+NUMERO_PRUEBA = "18095557777"
 
-gasto_prueba = crear_gasto(
-    db,
-    usuario_id=usuario_prueba.id,
-    monto=2700,
-    categoria=CategoriaGasto.PASAJE,
-    descripcion="gasolina"
-)
-print("Gasto creado:", gasto_prueba.id, gasto_prueba.monto, gasto_prueba.categoria)
+# Caso 1: mensaje normal de gasto -> debería crear usuario + gasto
+respuesta = procesar_mensaje(db, NUMERO_PRUEBA, "gasté 350 en uber al trabajo", nombre="Sadiel Prueba")
+print("Caso 1 (registrar):", respuesta)
 
-inicio_mes = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-ahora = datetime.now(UTC)
+# Caso 2: mismo número otra vez -> usuario YA existe, solo debe crear el gasto
+respuesta = procesar_mensaje(db, NUMERO_PRUEBA, "pagué 1200 de luz")
+print("Caso 2 (usuario reutilizado):", respuesta)
 
-print("Por categoría:", obtener_total_por_categoria(db, usuario_prueba.id, inicio_mes, ahora))
-print("Total general:", obtener_total_general(db, usuario_prueba.id, inicio_mes, ahora))
-print("Usuario existente:", obtener_usuario_por_numero(db, "18091234567").nombre)
-print("Total en pasaje:", obtener_total_por_categoria_especifica(db, usuario_prueba.id, CategoriaGasto.PASAJE, inicio_mes, ahora))
-print("Detalle gastos:", obtener_gastos_detalle(db, usuario_prueba.id, inicio_mes, ahora))
+# Caso 3: mensaje que el intent_router debería detectar como pregunta
+respuesta = procesar_mensaje(db, NUMERO_PRUEBA, "¿cuánto gasté en comida este mes?")
+print("Caso 3 (pregunta, sin tocar Groq):", respuesta)
 
 db.close()
