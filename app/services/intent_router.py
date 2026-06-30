@@ -9,12 +9,18 @@ class Intencion(str, Enum):
     """
     REGISTRAR_GASTO = "registrar_gasto"
     PREGUNTA = "pregunta"
+    SALUDO = "saludo"
 
 PALABRAS_PREGUNTA = [
     "cuanto", "cuánto", "cuanta", "cuánta",
     "cual", "cuál",
     "total", "resumen", "balance",
     "gaste en", "gasté en",  # "cuánto gasté en comida" usa esto
+]
+
+PALABRAS_SALUDO = [
+    "hola", "hey", "buenas", "hi", "hello",
+    "buen dia", "buenos dias", "buenas tardes", "buenas noches", "holi", "oye"
 ]
 
 def detectar_intencion(texto_usuario: str) -> Intencion:
@@ -39,6 +45,10 @@ def detectar_intencion(texto_usuario: str) -> Intencion:
     for palabra in PALABRAS_PREGUNTA:
         if palabra in texto_normalizado:
             return Intencion.PREGUNTA
+
+    for palabra in PALABRAS_SALUDO:
+        if palabra in texto_normalizado:
+            return Intencion.SALUDO
 
     return Intencion.REGISTRAR_GASTO
 

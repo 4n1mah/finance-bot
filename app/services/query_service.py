@@ -29,19 +29,19 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
 
     if consulta.tipo == TipoConsulta.TOTAL_GENERAL:
         total = obtener_total_general(db, usuario_id, inicio, fin)
-        return f"💰 Tu gasto total de este mes es: {total:.2f}"
+        return f"💰 Tu gasto total de este mes es: RD${total:,.2f}"
 
     if consulta.tipo == TipoConsulta.POR_CATEGORIA:
         if consulta.categoria is None:
             return "⚠️ No entendí qué categoría quieres consultar. Intenta con algo como '¿cuánto gasté en comida?'"
         total = obtener_total_por_categoria_especifica(db, usuario_id, consulta.categoria, inicio, fin)
-        return f"💰 Gastaste {total:.2f} en {consulta.categoria.value} este mes"
+        return f"💰 Gastaste RD${total:,.2f} en {consulta.categoria.value} este mes"
 
     if consulta.tipo == TipoConsulta.DESGLOSE:
         gastos = obtener_gastos_detalle(db, usuario_id, inicio, fin)
         if not gastos:
             return "📭 No tienes gastos registrados este mes."
         lineas = [f"• {g.categoria.value}: {g.monto:.2f} — {g.descripcion}" for g in gastos]
-        return "📊 Tus gastos de este mes:\n" + "\n".join(lineas)
+        return "📊 Tus gastos de este mes: \n" + "\n".join(lineas)
 
     return "⚠️ No entendí tu pregunta. Intenta con '¿cuánto gasté en comida?' o '¿cuánto gasté en total?'"
