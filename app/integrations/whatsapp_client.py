@@ -1,7 +1,7 @@
 import httpx
 from app.core.config import settings
 
-GRAPH_API_VERSION = "v21.0"
+GRAPH_API_VERSION = "v25.0"
 URL_ENVIO = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{{phone_number_id}}/messages"
 
 def enviar_mensaje_whatsapp(numero_destino: str, texto: str) -> dict:
