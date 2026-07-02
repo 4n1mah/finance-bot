@@ -53,7 +53,8 @@ Extrae la intención de la pregunta y devuelve SOLO este JSON sin texto adiciona
 Reglas:
 - Si pregunta por una categoría específica: tipo = "por_categoria" y categoria = la categoría mencionada
 - Si pregunta por el total sin especificar categoría: tipo = "total_general" y categoria = null
-- Si pide un resumen o desglose general: tipo = "desglose" y categoria = null"""
+- Si pide un resumen o desglose general: tipo = "desglose" y categoria = null
+- Si quiere registrar un gasto pero el usuario no usa las palabras clave "Gaste" por ejemplo: """
 
     messages = [
         ChatCompletionSystemMessageParam(role="system", content=prompt_sistema),
