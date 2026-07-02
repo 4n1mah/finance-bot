@@ -44,17 +44,17 @@ def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
     from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta
 
     prompt_sistema = """Eres un asistente que analiza preguntas sobre gastos personales.
-Extrae la intención de la pregunta y devuelve SOLO este JSON sin texto adicional:
-{
-  "tipo": "total_general" | "por_categoria" | "desglose",
-  "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros" | null
-}
+    Extrae la intención de la pregunta y devuelve SOLO este JSON sin texto adicional:
+    {
+    "tipo": "total_general" | "por_categoria" | "desglose",
+    "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros" | null
+    }
 
-Reglas:
-- Si pregunta por una categoría específica: tipo = "por_categoria" y categoria = la categoría mencionada
-- Si pregunta por el total sin especificar categoría: tipo = "total_general" y categoria = null
-- Si pide un resumen o desglose general: tipo = "desglose" y categoria = null
-- Si quiere registrar un gasto pero el usuario no usa las palabras clave "Gaste" por ejemplo: """
+    Reglas:
+    - Si pregunta por una categoría específica: tipo = "por_categoria" y categoria = la categoría mencionada
+    - Si pregunta por el total sin especificar categoría: tipo = "total_general" y categoria = null
+    - Si pide un resumen o desglose general: tipo = "desglose" y categoria = null
+    - Si quiere registrar un gasto pero el usuario no usa las palabras clave "Gaste" por ejemplo: """
 
     messages = [
         ChatCompletionSystemMessageParam(role="system", content=prompt_sistema),
@@ -69,6 +69,33 @@ Reglas:
 
     datos = json.loads(respuesta.choices[0].message.content)
     return ConsultaGasto(**datos)
+
+def extraer_gastos(texto_usuario: str) -> list[ExtraccionGasto]:
+    """
+    Util para extraer multiples gastos, el prompt le pide a Groq un array JSON con todos los gastos detectados.
+    """
+    prompt_sistema = """
+    Eres un extractor de datos de gastos. Dado un mensaje de WhatsApp, extrae TODOS los gastos mencionados y devuelve SOLO este JSON sin
+    texto adicional: {"gastos": [{"monto": <numero>}, "categoria":"<categoria>", "descripcion": "<texto breve>"]}
+
+    Si solo hay un gasto, devuelve un array de un elemento. Las categorias validas son exactamente: comida, pasaje,
+    cuidado_personal, servicios, salud, salidas, ahorros, pedidos, pagos, otros.
+    Si no puedes identificar el monto de algun gasto, usa null.
+    """
+
+    messages = [
+        ChatCompletionSystemMessageParam(role="system", content=prompt_sistema),
+        ChatCompletionUserMessageParam(role="user", content=texto_usuario),
+    ]
+
+    respuesta = client.chat.completions.create(model="llama-3.3-70b-versatile",
+                                               messages=messages,
+                                               response_format={"type":"json_object"}
+                                               )
+    
+    datos = json.loads(respuesta.choices[0].message.content)
+
+    return [ExtraccionGasto(**g) for g in datos["gastos"]]
 
 if __name__ == "__main__":
     resultado = extraer_gasto("gasté 200 pesos en comida hoy")
