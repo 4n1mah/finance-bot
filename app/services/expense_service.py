@@ -35,7 +35,7 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
             else:
                 gasto = crear_gasto(
                     db,
-                    usuario_id=usuario_id,
+                    usuario_id=usuario.id,
                     monto = extraccion.monto,
                     categoria=extraccion.categoria,
                     descripcion=extraccion.descripcion
@@ -50,7 +50,7 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
             else:
                 gasto = crear_gasto(
                     db,
-                    usuario_id=usuario_id,
+                    usuario_id=usuario.id,
                     monto = extraccion.monto,
                     categoria=extraccion.categoria,
                     descripcion=extraccion.descripcion
