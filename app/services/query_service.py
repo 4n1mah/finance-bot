@@ -70,7 +70,7 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
         gastos = obtener_gastos_detalle(db, usuario_id, inicio, fin)
         if not gastos:
             return f"📭 No tienes gastos registrados {etiqueta}."
-        lineas = [f"• {g.fecha}: {g.categoria.value}: RD${g.monto:.2f} ({g.descripcion})" for g in gastos]
+        lineas = [f"• {g.fecha.strftime("%d/%m/%Y %H:%M")}:RD${g.monto:.2f} - {g.categoria.value}({g.descripcion})" for g in gastos]
         return f"📊 Tus gastos de {etiqueta}: \n" + "\n".join(lineas)
 
     return "⚠️ No entendí tu pregunta. Intenta con '¿cuánto gasté en comida?' o '¿cuánto gasté en total?'"
