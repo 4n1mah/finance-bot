@@ -19,7 +19,20 @@ class TipoConsulta(str, Enum):
     POR_CATEGORIA = "por_categoria"
     DESGLOSE = "desglose"
 
+class PeriodoConsulta(str, Enum):
+    """
+    Periodo de tiempo que el usuario quiere consultar. Groq va a extraer esto del texto libre y devolverlo como String
+    """
+
+    HOY = "hoy"
+    ESTA_SEMANA = "esta_semana"
+    SEMANA_PASADA = "semana_pasada"
+    ESTE_MES = "este_mes"
+
 class ConsultaGasto(BaseModel):
     tipo: TipoConsulta
     categoria: Optional[CategoriaGasto] = None
+    periodo: PeriodoConsulta = PeriodoConsulta.ESTE_MES
+
+
 
