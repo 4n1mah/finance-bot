@@ -38,23 +38,31 @@ def extraer_gasto(texto_usuario: str) -> ExtraccionGasto:
 
 def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
     """
-    Mismo patrón que extraer_gasto() pero para preguntas.
-    Groq decide qué tipo de consulta es y si menciona una categoría.
+    Analiza una pregunta y extrae tipo, categoria y periodo de tiempo.
     """
-    from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta
 
     prompt_sistema = """Eres un asistente que analiza preguntas sobre gastos personales.
     Extrae la intención de la pregunta y devuelve SOLO este JSON sin texto adicional:
     {
     "tipo": "total_general" | "por_categoria" | "desglose",
-    "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros" | null
+    "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros" | null,
+    "periodo": "hoy" | "ayer" | "esta_semana" | "semana_pasada" | "este_mes" | "mes_pasado" 
     }
 
-    Reglas:
-    - Si pregunta por una categoría específica: tipo = "por_categoria" y categoria = la categoría mencionada
-    - Si pregunta por el total sin especificar categoría: tipo = "total_general" y categoria = null
-    - Si pide un resumen o desglose general: tipo = "desglose" y categoria = null
-    - Si quiere registrar un gasto pero el usuario no usa las palabras clave "Gaste" por ejemplo: """
+    Reglas para "tipo":
+    - Categoria especifica: ("Cuanto gaste en comida?") -> "por_categoria" y categoria = esa categoria
+    - Total sin categoria ("Cuanto gaste?") -> "total_general" y categoria = null
+    - Resumen/desglose ("en que gaste?", "resumen") -> "desglose" y categoria = null
+
+    Reglas para "periodo"
+    - "hoy" -> "hoy"
+    - "ayer" -> "ayer"
+    - "esta semana" / "en la semana" -> "esta_semana"
+    - "la semana pasada" -> "semana_pasada"
+    - "este mes" / "en el mes" -> "este_mes"
+    - "el mes pasado" -> "mes_pasado"
+    - SI NO menciona ningun periodo -> "este_mes"
+    """
 
     messages = [
         ChatCompletionSystemMessageParam(role="system", content=prompt_sistema),

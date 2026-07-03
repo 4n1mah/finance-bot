@@ -25,8 +25,10 @@ class PeriodoConsulta(str, Enum):
     """
 
     HOY = "hoy"
+    AYER = "ayer"
     ESTA_SEMANA = "esta_semana"
     SEMANA_PASADA = "semana_pasada"
+    MES_PASADO = "mes_pasado"
     ESTE_MES = "este_mes"
 
 class ConsultaGasto(BaseModel):

@@ -1,47 +1,76 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
-from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta
+from datetime import datetime, timedelta, timezone
+from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta, PeriodoConsulta
 from app.repositories.gasto_repository import (
     obtener_total_general,
     obtener_total_por_categoria_especifica,
     obtener_gastos_detalle,
 )
 
+TZ_LOCAL = timezone(timedelta(hours=4))
+UTC = timezone.utc
 
-def _rango_mes_actual():
+def _a_utc_naive(dt_local: datetime) -> datetime:
     """
-    Calcula el primer y último momento del mes actual.
-    Por qué aquí y no en el repository: el repository solo sabe de BD,
-    la decisión de "mes actual" es lógica de negocio — pertenece al service.
+    Convierte un datetime en zona local a UTC y le quita el tzinfo.
     """
-    ahora = datetime.now()
-    inicio = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    # Primer día del mes siguiente como fecha_fin (excluido por el filtro <)
-    if ahora.month == 12:
-        fin = ahora.replace(year=ahora.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    return dt_local.astimezone(UTC).replace(tzinfo=None)
+
+def _rango_por_periodo(periodo: PeriodoConsulta) -> tuple[datetime, datetime, str]:
+    """
+    Traduce un PeriodoConsulta a un rango [Inicio, Fin] en UTC + etiqueta legible
+    """
+    ahora = datetime.now(TZ_LOCAL)
+    inicio_hoy = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    if periodo == PeriodoConsulta.HOY:
+        inicio, fin, etiqueta = inicio_hoy, inicio_hoy + timedelta(days=1), "hoy"
+
+    elif periodo == PeriodoConsulta.AYER:
+        inicio, fin, etiqueta = inicio_hoy - timedelta(days=1), inicio_hoy, "ayer"
+    
+    elif periodo == PeriodoConsulta.ESTA_SEMANA:
+       inicio = inicio_hoy - timedelta(days=ahora.weekday())
+       fin, etiqueta = inicio + timedelta(days=7), "esta semana"
+
+    elif periodo == PeriodoConsulta.SEMANA_PASADA:
+        inicio_semana_actual = inicio_hoy - timedelta(days=ahora.weekday())
+        inicio = inicio_semana_actual - timedelta(days=7)
+        fin, etiqueta = inicio_semana_actual, "la semana pasada"
+
+    elif periodo == PeriodoConsulta.MES_PASADO:
+        inicio_mes_actual = inicio_hoy.replace(day=1)
+        inicio = (inicio_mes_actual - timedelta(days=1)).replace(day=1)
+        fin, etiqueta = inicio_mes_actual, "el mes pasado"
+
     else:
-        fin = ahora.replace(month=ahora.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
-    return inicio, fin
+        inicio = inicio_hoy.replace(day=1)
+        if inicio.month == 12:
+            fin = inicio.replace(year=inicio.year + 1, month=1)
+        else:
+            fin = inicio.replace(month=inicio.month + 1)
+            etiqueta = "este mes"
 
+    return _a_utc_naive(inicio), _a_utc_naive(fin), etiqueta
 
 def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) -> str:
-    inicio, fin = _rango_mes_actual()
+    inicio, fin, etiqueta = _rango_por_periodo(consulta.periodo)
 
     if consulta.tipo == TipoConsulta.TOTAL_GENERAL:
         total = obtener_total_general(db, usuario_id, inicio, fin)
-        return f"💰 Tu gasto total de este mes es: RD${total:,.2f}"
+        return f"💰 Tu gasto total {etiqueta}: RD${total:,.2f}"
 
     if consulta.tipo == TipoConsulta.POR_CATEGORIA:
         if consulta.categoria is None:
             return "⚠️ No entendí qué categoría quieres consultar. Intenta con algo como '¿cuánto gasté en comida?'"
         total = obtener_total_por_categoria_especifica(db, usuario_id, consulta.categoria, inicio, fin)
-        return f"💰 Gastaste RD${total:,.2f} en {consulta.categoria.value} este mes"
+        return f"💰 Gastaste RD${total:,.2f} en {consulta.categoria.value} {etiqueta}"
 
     if consulta.tipo == TipoConsulta.DESGLOSE:
         gastos = obtener_gastos_detalle(db, usuario_id, inicio, fin)
         if not gastos:
-            return "📭 No tienes gastos registrados este mes."
+            return f"📭 No tienes gastos registrados {etiqueta}."
         lineas = [f"• {g.categoria.value}: {g.monto:.2f} — {g.descripcion}" for g in gastos]
-        return "📊 Tus gastos de este mes: \n" + "\n".join(lineas)
+        return f"📊 Tus gastos de {etiqueta}: \n" + "\n".join(lineas)
 
     return "⚠️ No entendí tu pregunta. Intenta con '¿cuánto gasté en comida?' o '¿cuánto gasté en total?'"
