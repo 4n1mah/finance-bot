@@ -1,4 +1,4 @@
-# 💸 Finance Bot — WhatsApp Personal Finance Tracker
+#Finance Bot — WhatsApp Personal Finance Tracker
 
 Bot de WhatsApp para registrar gastos personales mediante lenguaje natural. Proyecto de portafolio construido con Python y FastAPI.
 
