@@ -46,7 +46,8 @@ def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
     {
     "tipo": "total_general" | "por_categoria" | "desglose",
     "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros" | null,
-    "periodo": "hoy" | "ayer" | "esta_semana" | "semana_pasada" | "este_mes" | "mes_pasado" 
+    "periodo": "hoy" | "ayer" | "esta_semana" | "semana_pasada" | "este_mes" | "mes_pasado",
+    "dia_especifico": <numero del 1 al 31, o null> 
     }
 
     Reglas para "tipo":
@@ -55,6 +56,7 @@ def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
     - Resumen/desglose ("en que gaste?", "resumen") -> "desglose" y categoria = null
 
     Reglas para "periodo"
+    - Si NO menciona ningun periodo ni dia especifico -> "este_mes"
     - "hoy" -> "hoy"
     - "ayer" -> "ayer"
     - "esta semana" / "en la semana" -> "esta_semana"
@@ -62,6 +64,11 @@ def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
     - "este mes" / "en el mes" -> "este_mes"
     - "el mes pasado" -> "mes_pasado"
     - SI NO menciona ningun periodo -> "este_mes"
+
+    Reglas para "dia_especifico"
+    - Si menciona un dia puntual del mes ("el 15", "el dia 3", "el 20 de este mes") -> dia_especifico = ese numero
+    - Si el mensaje NO menciona un dia puntual -> "dia_especifico" = null
+    - Si menciona un dia, ignora "periodo" (deja "este_mes" por defecto), dia_especifico manda
     """
 
     messages = [

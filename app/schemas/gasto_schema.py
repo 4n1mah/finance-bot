@@ -35,6 +35,7 @@ class ConsultaGasto(BaseModel):
     tipo: TipoConsulta
     categoria: Optional[CategoriaGasto] = None
     periodo: PeriodoConsulta = PeriodoConsulta.ESTE_MES
+    dia_especifico: Optional[int] = Field(default=None, ge=1, le=31)
 
 
 

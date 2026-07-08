@@ -53,8 +53,31 @@ def _rango_por_periodo(periodo: PeriodoConsulta) -> tuple[datetime, datetime, st
 
     return _a_utc_naive(inicio), _a_utc_naive(fin), etiqueta
 
+def  _rango_dia_especifico(dia: int) -> tuple[datetime, datetime, str]:
+    """
+    Rango [inicio, fin] para un dia puntual del MES ACTUAL, en hora local.
+    """
+    ahora = datetime.now(TZ_LOCAL)
+    try:
+        inicio = ahora.replace(day=dia, hour=0, minute=0, second=0, microsecond=0)
+    except ValueError:
+        raise ValueError (f"el dia {dia} no existe en el mes actual")
+    
+    fin = inicio + timedelta(days=1)
+    etiqueta = f"el {dia} de este mes"
+    return _a_utc_naive(inicio), _a_utc_naive(fin), etiqueta
+
 def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) -> str:
-    inicio, fin, etiqueta = _rango_por_periodo(consulta.periodo)
+    
+    if consulta.dia_especifico is not None:
+        try:
+            inicio, fin, etiqueta = _rango_dia_especifico(consulta.dia_especifico)
+        except ValueError as e:
+            return f"No pude calcular esa fecha: {e}"
+    else:
+        inicio, fin, etiqueta = _rango_por_periodo(consulta.periodo)
+
+    # inicio, fin, etiqueta = _rango_por_periodo(consulta.periodo)
 
     if consulta.tipo == TipoConsulta.TOTAL_GENERAL:
         total = obtener_total_general(db, usuario_id, inicio, fin)
