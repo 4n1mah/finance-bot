@@ -7,7 +7,7 @@ from app.repositories.gasto_repository import (
     obtener_gastos_detalle,
 )
 
-TZ_LOCAL = timezone(timedelta(hours=4))
+TZ_LOCAL = timezone(timedelta(hours=-4))
 UTC = timezone.utc
 
 def _a_utc_naive(dt_local: datetime) -> datetime:
@@ -49,7 +49,7 @@ def _rango_por_periodo(periodo: PeriodoConsulta) -> tuple[datetime, datetime, st
             fin = inicio.replace(year=inicio.year + 1, month=1)
         else:
             fin = inicio.replace(month=inicio.month + 1)
-            etiqueta = "este mes"
+        etiqueta = "este mes"
 
     return _a_utc_naive(inicio), _a_utc_naive(fin), etiqueta
 
@@ -67,6 +67,12 @@ def  _rango_dia_especifico(dia: int) -> tuple[datetime, datetime, str]:
     etiqueta = f"el {dia} de este mes"
     return _a_utc_naive(inicio), _a_utc_naive(fin), etiqueta
 
+def _a_local(dt_utc: datetime) -> datetime:
+    """
+    Convierte un datetime naive-UTC a hora local RD
+    """
+    return dt_utc.replace(tzinfo=UTC).astimezone(TZ_LOCAL)
+
 def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) -> str:
     
     if consulta.dia_especifico is not None:
@@ -76,8 +82,6 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
             return f"No pude calcular esa fecha: {e}"
     else:
         inicio, fin, etiqueta = _rango_por_periodo(consulta.periodo)
-
-    # inicio, fin, etiqueta = _rango_por_periodo(consulta.periodo)
 
     if consulta.tipo == TipoConsulta.TOTAL_GENERAL:
         total = obtener_total_general(db, usuario_id, inicio, fin)
@@ -93,7 +97,7 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
         gastos = obtener_gastos_detalle(db, usuario_id, inicio, fin)
         if not gastos:
             return f"📭 No tienes gastos registrados {etiqueta}."
-        lineas = [f"• *{g.fecha.strftime("%d/%m/%Y")}*: RD${g.monto:.2f} - _{g.categoria.value}({g.descripcion})_" for g in gastos]
+        lineas = [f"• *{_a_local(g.fecha).strftime('%d/%m/%Y')}*: RD${g.monto:.2f} - _{g.categoria.value}({g.descripcion})_" for g in gastos]
         return f"📊 Tus gastos de {etiqueta}: \n" + "\n".join(lineas)
 
     return "⚠️ No entendí tu pregunta. Intenta con '¿cuánto gasté en comida?' o '¿cuánto gasté en total?'"
