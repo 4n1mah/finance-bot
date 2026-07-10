@@ -56,7 +56,4 @@ def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
                 intenciones.append(Intencion.PREGUNTA)
                 break
 
-    if not intenciones:
-        intenciones.append(Intencion.REGISTRAR_GASTO)
-
     return intenciones
