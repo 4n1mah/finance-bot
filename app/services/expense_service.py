@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from app.repositories.usuario_repository import crear_usuario, obtener_usuario_por_numero
 from app.repositories.gasto_repository import crear_gasto
 from app.integrations.groq_client import extraer_gasto, extraer_consulta, extraer_gastos
-from app.services.intent_router import detectar_intenciones, Intencion
+from app.services.intent_router import detectar_intenciones, detectar_categoria_directa, Intencion
 from app.services.query_service import responder_consulta
+from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta, PeriodoConsulta
 from app.models.usuarios import Usuario
 from app.models.gasto import Gasto
 
@@ -20,8 +21,13 @@ def _formatear_confirmacion(gasto: Gasto) -> str:
     )
 
 def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str = "Usuario") -> str:
-    intenciones = detectar_intenciones(texto)
     usuario = _resolver_usuario(db, numero_whatsapp, nombre)
+    categoria_directa = detectar_categoria_directa(texto)
+    if categoria_directa is not None:
+        consulta = ConsultaGasto(tipo=TipoConsulta.POR_CATEGORIA, categoria=categoria_directa, periodo=PeriodoConsulta.ESTE_MES)
+        return responder_consulta(db, usuario.id, consulta)
+
+    intenciones = detectar_intenciones(texto)
     partes = []
 
     if Intencion.SALUDO in intenciones:

@@ -1,5 +1,7 @@
 from enum import Enum
 import re
+from typing import Optional
+from app.models.gasto import CategoriaGasto
 
 class Intencion(str, Enum):
     """
@@ -57,3 +59,13 @@ def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
                 break
 
     return intenciones
+
+def detectar_categoria_directa(texto_usuario: str) -> Optional[CategoriaGasto]:
+    """
+    Revisa si el mensaje completo (sin nada mas) es exactamente el nombre de una categoria, ej: "comida".
+    """
+    texto_normalizado = texto_usuario.strip().lower()
+    for categoria in CategoriaGasto:
+        if texto_normalizado == categoria.value:
+            return categoria
+    return None
