@@ -55,7 +55,7 @@ def enviar_typing_indicator(mensaje_id: str) -> dict:
         "Content-Type": "application/json",
         }
     payload = {
-        "messaging_produt": "whatsapp",
+        "messaging_product": "whatsapp",
         "status": "read",
         "message_id": mensaje_id,
         "typing_indicator": {"type": "text"},
