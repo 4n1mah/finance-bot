@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.services.expense_service import procesar_mensaje
-from app.integrations.whatsapp_client import enviar_mensaje_whatsapp
+from app.integrations.whatsapp_client import enviar_mensaje_whatsapp, enviar_typing_indicator
 
 MENSAJES_PROCESADOS: set[str] = set()
 router = APIRouter()
@@ -49,6 +49,7 @@ async def recibir_mensaje(request: Request, db: Session = Depends(get_db)):
             return {"status": "duplicado"}
 
         MENSAJES_PROCESADOS.add(mensaje_id)
+        enviar_typing_indicator(mensaje_id)
 
         numero_whatsapp = mensaje["from"]
         texto_usuario = mensaje["text"]["body"]

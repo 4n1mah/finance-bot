@@ -3,6 +3,7 @@ from app.core.config import settings
 
 GRAPH_API_VERSION = "v25.0"
 URL_ENVIO = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{{phone_number_id}}/messages"
+URL_TYPING = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{{phone_number_id}}/messages"
 
 def enviar_mensaje_whatsapp(numero_destino: str, texto: str) -> dict:
     """
@@ -41,3 +42,28 @@ def enviar_mensaje_whatsapp(numero_destino: str, texto: str) -> dict:
         print(f"⚠️ Error enviando WhatsApp a {numero_destino}: {respuesta.status_code} - {respuesta.text}")
 
     return respuesta.json()
+
+def enviar_typing_indicator(mensaje_id: str) -> dict:
+    """
+    Marca el mensaje entrante como leido y muestra "escribiendo..." en el chat del usuario.
+    """
+
+    url = URL_TYPING.format(phone_number_id=settings.meta_phone_number_id)
+
+    headers = {
+        "Authorization": f"Bearer {settings.meta_access_token}",
+        "Content-Type": "application/json",
+        }
+    payload = {
+        "messaging_produt": "whatsapp",
+        "status": "read",
+        "message_id": mensaje_id,
+        "typing_indicator": {"type": "text"},
+        }
+    
+    respuesta = httpx.post(url, headers=headers, json=payload)
+    if respuesta.status_code != 200:
+        print(f"Error enviando typing indicator: {respuesta.status_code} - {respuesta.text}")
+    
+    return respuesta.json()
+    
