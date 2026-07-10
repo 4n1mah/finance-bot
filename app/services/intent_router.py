@@ -17,8 +17,8 @@ class Intencion(str, Enum):
 PALABRAS_PREGUNTA = [
     "cuanto", "cuánto", "cuanta", "cuánta",
     "cual", "cuál",
-    "total", "resumen", "balance",
-    "gaste en", "gasté en",  # "cuánto gasté en comida" usa esto
+    "total", "resumen", "balance", "detalle",
+    "gaste en", "gasté en"
 ]
 
 PALABRAS_SALUDO = [
@@ -45,18 +45,28 @@ def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
             intenciones.append(Intencion.SALUDO)
             break
 
-    for palabra in PALABRAS_GASTO:
-        if palabra in texto_normalizado and bool(re.search(r"\d", texto_normalizado)):
-            intenciones.append(Intencion.REGISTRAR_GASTO)
-            break
-
-    if "?" in texto_normalizado:
+    es_pregunta = "?" in texto_normalizado or any(palabra in texto_normalizado for palabra in PALABRAS_PREGUNTA)
+    if es_pregunta:
         intenciones.append(Intencion.PREGUNTA)
-    else:
-        for palabra in PALABRAS_PREGUNTA:
-            if palabra in texto_normalizado:
-                intenciones.append(Intencion.PREGUNTA)
-                break
+
+    contiene_digito = bool(re.search(r"\d", texto_normalizado))
+    tiene_palabra_gasto = any(palabra in texto_normalizado for palabra in PALABRAS_GASTO)
+
+    if contiene_digito and (tiene_palabra_gasto or not es_pregunta):
+        intenciones.append(Intencion.REGISTRAR_GASTO)
+
+    # for palabra in PALABRAS_GASTO:
+    #     if palabra in texto_normalizado and bool(re.search(r"\d", texto_normalizado)):
+    #         intenciones.append(Intencion.REGISTRAR_GASTO)
+    #         break
+
+    # if "?" in texto_normalizado:
+    #     intenciones.append(Intencion.PREGUNTA)
+    # else:
+    #     for palabra in PALABRAS_PREGUNTA:
+    #         if palabra in texto_normalizado:
+    #             intenciones.append(Intencion.PREGUNTA)
+    #             break
 
     return intenciones
 
