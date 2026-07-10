@@ -8,6 +8,7 @@ from app.repositories.gasto_repository import (
     obtener_total_general,
     obtener_total_por_categoria_especifica,
     obtener_gastos_detalle,
+    obtener_total_por_categoria
 )
 
 TZ_LOCAL = timezone(timedelta(hours=-4))
@@ -131,13 +132,20 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
         return f"Gastaste RD${total:,.2f} en {consulta.categoria.value} {etiqueta}"
 
     if consulta.tipo == TipoConsulta.DESGLOSE:
-        gastos = obtener_gastos_detalle(db, usuario_id, inicio, fin)
-        if not gastos:
-            return f"No tienes gastos registrados {etiqueta}."
+        resultados = obtener_total_por_categoria(db, usuario_id, inicio, fin)
+        if not resultados:
+            return f"No tienes gastos registrados {etiqueta}"
+
         lineas = [
-            f"• *{_a_local(g.fecha).strftime('%d/%m/%Y')}*: RD${g.monto:.2f} - _{g.categoria.value}({g.descripcion})_"
-            for g in gastos
+            f"• {categoria.value}: *RD${float(total):,.2f}*"
+            for categorira, total in resultados
         ]
-        return f"📊 Tus gastos de {etiqueta}: \n" + "\n".join(lineas)
+        total_general = sum(float(total) for _, total in resultados)
+
+        return (
+            f"📊 Tu desglose de {etiqueta}:\n"
+            + "\n".join(lineas)
+            + f"\n\n *Total: RD${total_general:,.2f}*"
+        )
 
     return "No entendí tu pregunta. Intenta con '¿cuánto gasté en comida?' o '¿cuánto gasté en total?'"

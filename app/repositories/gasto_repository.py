@@ -47,7 +47,6 @@ def obtener_total_por_categoria_especifica(db: Session, usuario_id: int, categor
     )
     return total or 0
 
-
 def obtener_gastos_detalle(db: Session, usuario_id: int, fecha_inicio: datetime, fecha_fin: datetime, categoria: CategoriaGasto = None):
     query = (
         db.query(Gasto)

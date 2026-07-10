@@ -80,7 +80,7 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
                 f"Gastaste *RD${total:,.2f}* en: "
                 f"\"{texto.strip()}\" {etiqueta}"
                 )
-    else:
-        partes.append("👋 ¡Hola! Puedo registrar tus gastos o responder preguntas como '¿cuánto gasté en comida este mes?'")
+        else:
+            partes.append("👋 ¡Hola! Puedo registrar tus gastos o responder preguntas como '¿cuánto gasté en comida este mes?'")
 
     return "\n".join(partes)
