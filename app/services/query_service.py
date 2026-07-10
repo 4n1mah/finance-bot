@@ -77,7 +77,7 @@ def _normalizar_texto(texto: str) -> str:
     """
     Normaliza texto para comparaciones flexibles: minusculas, sin acentos, sin espacios ni signos de puntuacion
     """
-    texto = texto.lower().strip
+    texto = texto.lower().strip()
     texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("utf-8")
     texto = re.sub(r"[^a-z0-9]", "", texto)
 
