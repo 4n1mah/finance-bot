@@ -52,6 +52,7 @@ def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
 
     Reglas para "tipo":
     - Categoria especifica: ("Cuanto gaste en comida?") -> "por_categoria" y categoria = esa categoria
+    - Desglose/detalle de UNA categoria especifica ("desglosame cuanto gaste en salud", "detalle de mis gastos en comida", "que son esos gastos de servicios") -> "desglose_categoria" y categoria = esa categoria 
     - Total sin categoria ("Cuanto gaste?") -> "total_general" y categoria = null
     - Resumen/desglose ("en que gaste?", "resumen") -> "desglose" y categoria = null
 

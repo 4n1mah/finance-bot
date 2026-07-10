@@ -14,10 +14,12 @@ class TipoConsulta(str, Enum):
     - TOTAL_GENERAL: "¿cuánto gasté en total?"
     - POR_CATEGORIA: "¿cuánto gasté en comida?"  (necesita categoría específica)
     - DESGLOSE: "¿en qué gasté?" / "resumen de gastos"
+    - DESGLOSE_CATEGORIA: "Desglosame cuanto gaste en salud" (detalle linea por linea)
     """
     TOTAL_GENERAL = "total_general"
     POR_CATEGORIA = "por_categoria"
     DESGLOSE = "desglose"
+    DESGLOSE_CATEGORIA = "desglose_categoria"
 
 class PeriodoConsulta(str, Enum):
     """

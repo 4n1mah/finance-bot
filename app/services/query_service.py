@@ -129,7 +129,27 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
         total = obtener_total_por_categoria_especifica(
             db, usuario_id, consulta.categoria, inicio, fin
         )
-        return f"Gastaste RD${total:,.2f} en {consulta.categoria.value} {etiqueta}"
+        return f"Gastaste *RD${total:,.2f}* en {consulta.categoria.value} {etiqueta}"
+    
+    if consulta.tipo == TipoConsulta.DESGLOSE_CATEGORIA:
+        if consulta.categoria is None:
+            return "No entendi de que categoria quieres el desglose. Intenta con 'desglosame cuanto gaste en salud'."
+        
+        gastos = obtener_gastos_detalle(db, usuario_id, inicio, fin, categoria=consulta.categoria)
+        if not gastos:
+            return f"No tienes gastos en {consulta.categoria.value} {etiqueta}."
+
+        lineas = [
+            f"• *{_a_local(g.fecha).strftime('%d/%m/%Y')}*: RD${g.monto:.2f} - _{g.descripcion}_"
+            for g in gastos
+        ]
+        total = sum(float(g.monto) for g in gastos)
+
+        return (
+            f"📊 Tu desglose de {consulta.categoria.value} {etiqueta}: \n"
+            + "\n".join(lineas)
+            + f"\n\n Total: *RD${total:,.2f}*"
+        )
 
     if consulta.tipo == TipoConsulta.DESGLOSE:
         resultados = obtener_total_por_categoria(db, usuario_id, inicio, fin)
@@ -145,7 +165,7 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
         return (
             f"📊 Tu desglose de {etiqueta}:\n"
             + "\n".join(lineas)
-            + f"\n\n *Total: RD${total_general:,.2f}*"
+            + f"\n\n Total: *RD${total_general:,.2f}*"
         )
 
     return "No entendí tu pregunta. Intenta con '¿cuánto gasté en comida?' o '¿cuánto gasté en total?'"
