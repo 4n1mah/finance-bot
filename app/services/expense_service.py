@@ -1,9 +1,10 @@
+import re
 from sqlalchemy.orm import Session
 from app.repositories.usuario_repository import crear_usuario, obtener_usuario_por_numero
 from app.repositories.gasto_repository import crear_gasto
 from app.integrations.groq_client import extraer_gasto, extraer_consulta, extraer_gastos
 from app.services.intent_router import detectar_intenciones, detectar_categoria_directa, Intencion
-from app.services.query_service import responder_consulta, buscar_total_por_descripcion
+from app.services.query_service import responder_consulta, buscar_total_por_descripcion, _normalizar_manteniendo_espacios
 from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta, PeriodoConsulta
 from app.models.usuarios import Usuario
 from app.models.gasto import Gasto
@@ -64,16 +65,16 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
                 partes.append(_formatear_confirmacion(gasto))  
 
         consulta = extraer_consulta(texto)
-        texto_normalizado = texto.lower()
-        if consulta.categoria is not None and any(p in texto_normalizado for p in ["desglos", "detall"]):
+        texto_normalizado = _normalizar_manteniendo_espacios(texto)
+        if consulta.categoria is not None and (re.search(r"\bque\b", texto_normalizado) or any(p in texto_normalizado for p in ["desglos", "detall"])):
             consulta.tipo = TipoConsulta.DESGLOSE_CATEGORIA
         partes.append(responder_consulta(db, usuario.id, consulta))
 
     # PREGUNTA sola (sin gasto)
     elif Intencion.PREGUNTA in intenciones and Intencion.REGISTRAR_GASTO not in intenciones:
         consulta = extraer_consulta(texto)
-        texto_normalizado = texto.lower()
-        if consulta.categoria is not None and any(p in texto_normalizado for p in ["desglos", "detall"]):
+        texto_normalizado = _normalizar_manteniendo_espacios(texto)
+        if consulta.categoria is not None and (re.search(r"\bque\b", texto_normalizado) or any(p in texto_normalizado for p in ["desglos", "detall"])):
             consulta.tipo = TipoConsulta.DESGLOSE_CATEGORIA
         partes.append(responder_consulta(db, usuario.id, consulta))
 

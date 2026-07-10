@@ -84,6 +84,14 @@ def _normalizar_texto(texto: str) -> str:
 
     return texto
 
+def _normalizar_manteniendo_espacios(texto: str) -> str:
+    """
+    Normaliza el texto SOLO quitando mayusculas y acentos, pero conservando espacios y signos de puntuacion.
+    """
+    texto = texto.lower().strip()
+    texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("utf-8")
+    return texto
+
 def buscar_total_por_descripcion(db: Session, usuario_id: int, termino_busqueda: str, periodo: PeriodoConsulta = PeriodoConsulta.ESTE_MES) -> Optional[tuple[float, str, list]]:
     """
     Busca gastos cuya descripcion contenga el termino de busqueda (ambos normalizados), dentro de un periodo
