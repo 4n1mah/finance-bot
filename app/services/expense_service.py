@@ -3,7 +3,7 @@ from app.repositories.usuario_repository import crear_usuario, obtener_usuario_p
 from app.repositories.gasto_repository import crear_gasto
 from app.integrations.groq_client import extraer_gasto, extraer_consulta, extraer_gastos
 from app.services.intent_router import detectar_intenciones, detectar_categoria_directa, Intencion
-from app.services.query_service import responder_consulta
+from app.services.query_service import responder_consulta, buscar_total_por_descripcion
 from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta, PeriodoConsulta
 from app.models.usuarios import Usuario
 from app.models.gasto import Gasto
@@ -73,6 +73,14 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
 
     # Si solo hay SALUDO sin gasto ni pregunta
     if not partes:
+        resultado_busqueda = buscar_total_por_descripcion(db, usuario.id, texto)
+        if resultado_busqueda is not None:
+            total, etiqueta, coincidencias = resultado_busqueda
+            partes.append(
+                f"Gastaste RD${total:,.2f} en:"
+                f"\"{texto.strip()}\" {etiqueta}"
+                )
+    else:
         partes.append("👋 ¡Hola! Puedo registrar tus gastos o responder preguntas como '¿cuánto gasté en comida este mes?'")
 
     return "\n".join(partes)

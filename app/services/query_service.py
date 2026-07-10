@@ -1,3 +1,6 @@
+import re
+import unicodedata
+from typing import Optional
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta, PeriodoConsulta
@@ -70,13 +73,40 @@ def _rango_dia_especifico(dia: int) -> tuple[datetime, datetime, str]:
     etiqueta = f"el {dia} de este mes"
     return _a_utc_naive(inicio), _a_utc_naive(fin), etiqueta
 
+def _normalizar_texto(texto: str) -> str:
+    """
+    Normaliza texto para comparaciones flexibles: minusculas, sin acentos, sin espacios ni signos de puntuacion
+    """
+    texto = texto.lower().strip
+    texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("utf-8")
+    texto = re.sub(r"[^a-z0-9]", "", texto)
+
+    return texto
+
+def buscar_total_por_descripcion(db: Session, usuario_id: int, termino_busqueda: str, periodo: PeriodoConsulta = PeriodoConsulta.ESTE_MES) -> Optional[tuple[float, str, list]]:
+    """
+    Busca gastos cuya descripcion contenga el termino de busqueda (ambos normalizados), dentro de un periodo
+    """
+    inicio, fin, etiqueta = _rango_por_periodo(periodo)
+    gastos = obtener_gastos_detalle(db, usuario_id, inicio, fin)
+
+    termino_normalizado = _normalizar_texto(termino_busqueda)
+    coincidencias = [
+        g for g in gastos
+        if termino_normalizado in _normalizar_texto(g.descripcion)
+    ]
+
+    if not coincidencias:
+        return None
+    
+    total = sum(float(g.monto) for g in coincidencias)
+    return total, etiqueta, coincidencias
 
 def _a_local(dt_utc: datetime) -> datetime:
     """
     Convierte un datetime naive-UTC a hora local RD
     """
     return dt_utc.replace(tzinfo=UTC).astimezone(TZ_LOCAL)
-
 
 def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) -> str:
 
