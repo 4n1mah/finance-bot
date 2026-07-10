@@ -17,7 +17,7 @@ class Intencion(str, Enum):
 PALABRAS_PREGUNTA = [
     "cuanto", "cuánto", "cuanta", "cuánta",
     "cual", "cuál",
-    "total", "resumen", "balance", "detalle",
+    "total", "resumen", "balance", "detall", "desglos",
     "gaste en", "gasté en"
 ]
 

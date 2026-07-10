@@ -64,11 +64,17 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
                 partes.append(_formatear_confirmacion(gasto))  
 
         consulta = extraer_consulta(texto)
+        texto_normalizado = texto.lower()
+        if consulta.categoria is not None and any(p in texto_normalizado for p in ["desglos", "detall"]):
+            consulta.tipo = TipoConsulta.DESGLOSE_CATEGORIA
         partes.append(responder_consulta(db, usuario.id, consulta))
 
     # PREGUNTA sola (sin gasto)
     elif Intencion.PREGUNTA in intenciones and Intencion.REGISTRAR_GASTO not in intenciones:
         consulta = extraer_consulta(texto)
+        texto_normalizado = texto.lower()
+        if consulta.categoria is not None and any(p in texto_normalizado for p in ["desglos", "detall"]):
+            consulta.tipo = TipoConsulta.DESGLOSE_CATEGORIA
         partes.append(responder_consulta(db, usuario.id, consulta))
 
     # Si solo hay SALUDO sin gasto ni pregunta
