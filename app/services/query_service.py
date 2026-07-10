@@ -120,7 +120,7 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
 
     if consulta.tipo == TipoConsulta.TOTAL_GENERAL:
         total = obtener_total_general(db, usuario_id, inicio, fin)
-        return f"Tu gasto total {etiqueta}: RD${total:,.2f}"
+        return f"Tu gasto total {etiqueta}: *RD${total:,.2f}*"
 
     if consulta.tipo == TipoConsulta.POR_CATEGORIA:
         if consulta.categoria is None:

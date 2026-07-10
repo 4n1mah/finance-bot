@@ -54,20 +54,7 @@ def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
 
     if contiene_digito and (tiene_palabra_gasto or not es_pregunta):
         intenciones.append(Intencion.REGISTRAR_GASTO)
-
-    # for palabra in PALABRAS_GASTO:
-    #     if palabra in texto_normalizado and bool(re.search(r"\d", texto_normalizado)):
-    #         intenciones.append(Intencion.REGISTRAR_GASTO)
-    #         break
-
-    # if "?" in texto_normalizado:
-    #     intenciones.append(Intencion.PREGUNTA)
-    # else:
-    #     for palabra in PALABRAS_PREGUNTA:
-    #         if palabra in texto_normalizado:
-    #             intenciones.append(Intencion.PREGUNTA)
-    #             break
-
+        
     return intenciones
 
 def detectar_categoria_directa(texto_usuario: str) -> Optional[CategoriaGasto]:

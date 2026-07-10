@@ -16,7 +16,7 @@ def _resolver_usuario(db: Session, numero_whatsapp: str, nombre: str) -> Usuario
 
 def _formatear_confirmacion(gasto: Gasto) -> str:
     return (
-        f"✅ Gasto registrado: RD${gasto.monto} en {gasto.categoria.value} "
+        f"✅ Gasto registrado: *RD${gasto.monto}* en {gasto.categoria.value} "
         f"({gasto.descripcion})"
     )
 
@@ -77,7 +77,7 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
         if resultado_busqueda is not None:
             total, etiqueta, coincidencias = resultado_busqueda
             partes.append(
-                f"Gastaste RD${total:,.2f} en:"
+                f"Gastaste *RD${total:,.2f}* en: "
                 f"\"{texto.strip()}\" {etiqueta}"
                 )
     else:
