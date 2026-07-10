@@ -136,11 +136,11 @@ def responder_consulta(db: Session, usuario_id: int, consulta: ConsultaGasto) ->
         if not resultados:
             return f"No tienes gastos registrados {etiqueta}"
 
-        lineas = [
-            f"• {categoria.value}: *RD${float(total):,.2f}*"
-            for categorira, total in resultados
-        ]
-        total_general = sum(float(total) for _, total in resultados)
+        lineas = []
+        for categoria, total in resultados:
+            lineas.append(f"•{categoria.value}: *RD${float(total):,.2f}*")
+        
+        total_general = sum(float(total) for categoria, total in resultados)
 
         return (
             f"📊 Tu desglose de {etiqueta}:\n"
