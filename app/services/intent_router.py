@@ -1,4 +1,5 @@
 from enum import Enum
+import re
 
 class Intencion(str, Enum):
     """
@@ -43,7 +44,7 @@ def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
             break
 
     for palabra in PALABRAS_GASTO:
-        if palabra in texto_normalizado:
+        if palabra in texto_normalizado and bool(re.search(r"\d", texto_normalizado)):
             intenciones.append(Intencion.REGISTRAR_GASTO)
             break
 
@@ -59,14 +60,3 @@ def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
         intenciones.append(Intencion.REGISTRAR_GASTO)
 
     return intenciones
-
-if __name__ == "__main__":
-    pruebas = [
-        "hola, gasté 200 en comida hoy",
-        "¿cuánto gasté en comida este mes?",
-        "cuanto llevo gastado",
-        "pague 500 de luz",
-        "hola, gaste 240 en la sirena. cuanto he gastado en comida?",
-    ]
-    for texto in pruebas:
-        print(f"{texto!r} -> {detectar_intenciones(texto)}")
