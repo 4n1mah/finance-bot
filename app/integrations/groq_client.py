@@ -1,6 +1,12 @@
 from groq import Groq
 from app.core.config import settings
-from app.schemas.gasto_schema import ExtraccionGasto, ConsultaGasto, TipoConsulta
+from app.schemas.gasto_schema import (
+    ExtraccionGasto, 
+    ConsultaGasto, 
+    TipoConsulta, 
+    ExtraccionGastoFijo,
+    ConsultaGastoFijo
+)
 from groq.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
 import json
 
@@ -112,6 +118,37 @@ def extraer_gastos(texto_usuario: str) -> list[ExtraccionGasto]:
     datos = json.loads(respuesta.choices[0].message.content)
 
     return [ExtraccionGasto(**g) for g in datos["gastos"]]
+
+def extraer_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
+    """
+    Extrae un pago recurrente: "Netflix los 12 de cada mes por $10."
+    """
+    prompt_sistema = """
+    Eres un extractor de gastos fijos recurrentes (suscripciones, prestamos, alquiler).
+    Devuelve SOLO este JSON sin texto adicional:
+    {
+    "monto": <numero>,
+    "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros",
+    "descripcion": "<nombre corto del pago, ej: 'Netflix', 'Prestamo BHD' >",
+    "dia_mes": <numero del 1 al 31>
+    }
+
+    Reglas:
+    - "dia_mes" es el dia del mes en que se cobra. "los 12 de cada mes" -> 12. "el 4 de cadames" -> 4.
+    - Ignora simbolos de monera y separadores de miles. "RD$2,000" -> 2000.
+    - Prestamos, tarjetas y cuotas -> categoria "pagos".
+    - Suscripciones digitales (Netflix, Spotify) -> categoria "servicios".
+    - La descripcion debe ser corta y sin el monto ni la fecha
+"""
+
+    messages = [
+        ChatCompletionUserMessageParam(role="system", content=prompt_sistema),
+        ChatCompletionSystemMessageParam(role="user", content=texto_usuario),
+    ]
+
+    respuesta = client.chat.completions.create(
+        model="llama-3.3-70b-versatile"
+    )
 
 if __name__ == "__main__":
     resultado = extraer_gasto("gasté 200 pesos en comida hoy")

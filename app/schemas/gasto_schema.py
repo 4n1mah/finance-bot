@@ -40,4 +40,13 @@ class ConsultaGasto(BaseModel):
     dia_especifico: Optional[int] = Field(default=None, ge=1, le=31)
 
 
+class ExtraccionGastoFijo(BaseModel):
+    monto: float = Field(description="El monto a pagar cada mes")
+    categoria: CategoriaGasto = Field(description="La categoria del pago fijo")
+    descripcion: str = Field(description="Que es el pago fijo, ej: 'Netflix', 'Prestamo', etc")
+    dia_mes: int = Field(ge=1, le=31, description="Dia del mes en que se cobra")
 
+class ConsultaGastoFijo(BaseModel):
+    termino: Optional[str] = None
+    categoria: Optional[CategoriaGasto] = None
+    
