@@ -4,6 +4,7 @@ from app.core.database import Base, engine
 from app.models.usuarios import Usuario
 from app.models.gasto import Gasto
 from app.routers.webhook import router as webhook_router
+from app.models.gasto_fijo import GastoFijo
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
