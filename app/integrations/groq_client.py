@@ -147,8 +147,46 @@ def extraer_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
     ]
 
     respuesta = client.chat.completions.create(
-        model="llama-3.3-70b-versatile"
+        model="llama-3.3-70b-versatile",
+        messages=messages,
+        response_format={"type": "json_object"},
     )
+
+    datos = json.loads(respuesta.choices[0].message.content)
+    return ConsultaGastoFijo(**datos)
+
+def extraer_consulta_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
+    """
+    Analiza 'cuando debo pagar el prestamo del BHD? -> termino = BHD.
+    """
+
+    prompt_sistema = """
+    Analizas preguntas sobre pagos fijos ya registrados. 
+    Devuelve SOLO este JSON sin texto adicional:
+    {
+    "termino": "<palabra clave del pago que busca, o null>",
+    "categoria": "comida" | "pasaje" | "cuidado_personal" | "servicios" | "salud" | "salidas" | "ahorros" | "pedidos" | "pagos" | "otros" | null
+    }
+
+    Reglas:
+    - "termino" es la palabra mas distintiva del pago: "cuando pago el prestamo del BHD" -> "bhd". "cuando se cobra Netflix" -> "netflix.
+    - Si la pregunta es general ("cuales son mis pagos fijos?", "que debo pagar este mes?") -> termino = null y categoria = null.
+    - Si pregunta por un grupo ("mis suscripciones", "mis pagos") -> termibo = null y categoria = esa categoria.
+    - NUNCA inventes un termino si el usuario no nombro nada especifico."""
+
+    messages = [
+        ChatCompletionUserMessageParam(role="system", content=prompt_sistema),
+        ChatCompletionSystemMessageParam(role="user", content=texto_usuario),
+    ]
+
+    respuesta = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=messages,
+        response_format={"type": "json_object"},
+    )
+
+    datos = json.loads(respuesta.choices[0].message.content)
+    return ConsultaGastoFijo(**datos)
 
 if __name__ == "__main__":
     resultado = extraer_gasto("gasté 200 pesos en comida hoy")

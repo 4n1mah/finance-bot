@@ -2,7 +2,16 @@ import re
 from sqlalchemy.orm import Session
 from app.repositories.usuario_repository import crear_usuario, obtener_usuario_por_numero
 from app.repositories.gasto_repository import crear_gasto
-from app.integrations.groq_client import extraer_gasto, extraer_consulta, extraer_gastos
+from app.repositories.gasto_fijo_repository import crear_gasto_fijo
+from app.services.gasto_fijo_service import responder_gasto_fijo
+from app.services.date_utils import calcular_proxima_fecha, dias_restantes
+from app.integrations.groq_client import (
+    extraer_gasto, 
+    extraer_consulta, 
+    extraer_gastos,
+    extraer_gasto_fijo,
+    extraer_consulta_gasto_fijo
+        )
 from app.services.intent_router import detectar_intenciones, detectar_categoria_directa, Intencion
 from app.services.query_service import responder_consulta, buscar_total_por_descripcion, _normalizar_manteniendo_espacios
 from app.schemas.gasto_schema import ConsultaGasto, TipoConsulta, PeriodoConsulta
@@ -21,6 +30,16 @@ def _formatear_confirmacion(gasto: Gasto) -> str:
         f"({gasto.descripcion})"
     )
 
+def _formatear_confirmacion_fijo(gf) -> str:
+    fecha = calcular_proxima_fecha(gf.dia_mes)
+    dias = dias_restantes(gf.dia_mes)
+    return (
+        f"📍 Pago fijo registrado: *RD${float(gf.monto):,.2f}* - {gf.descripcion} "
+        f"({gf.categoria.value})\n"
+        f"Se paga el *{gf.dia_mes} de cada mes*."
+        f"Próximo: {fecha.strftime('%d/%m/%Y')} (faltan {dias} días)."
+    )
+
 def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str = "Usuario") -> str:
     usuario = _resolver_usuario(db, numero_whatsapp, nombre)
     categoria_directa = detectar_categoria_directa(texto)
@@ -33,6 +52,34 @@ def procesar_mensaje(db: Session, numero_whatsapp: str, texto: str, nombre: str 
 
     if Intencion.SALUDO in intenciones:
         partes.append("Hola! Como te ayudo hoy?")
+
+    if Intencion.REGISTRAR_GASTO_FIJO in intenciones:
+        try: 
+            extraccion = extraer_gasto_fijo(texto)
+        except Exception:
+            return "No pude entender ese pago fijo. Intenta algo como 'Netflix RD$500 el 12 de cada mes'"
+        
+        gasto_fijo = crear_gasto_fijo(
+            db,
+            usuario_id=usuario.id,
+            monto=extraccion.monto,
+            categoria=extraccion.categoria,
+            descripcion=extraccion.descripcion,
+            dia_mes=extraccion.dia_mes
+        )
+        partes.append(_formatear_confirmacion_fijo(gasto_fijo))
+        return "\n".join(partes)
+
+    if Intencion.PREGUNTA_GASTO_FIJO in intenciones:
+        consulta_fijo = extraer_consulta_gasto_fijo(texto)
+        partes.append(responder_gasto_fijo(
+            db,
+            usuario.id,
+            termino=consulta_fijo.termino,
+            categoria=consulta_fijo.categoria,
+            )
+        )
+        return "\n".join(partes)
 
     if Intencion.REGISTRAR_GASTO in intenciones and Intencion.PREGUNTA not in intenciones:
 
