@@ -142,8 +142,8 @@ def extraer_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
 """
 
     messages = [
-        ChatCompletionUserMessageParam(role="system", content=prompt_sistema),
-        ChatCompletionSystemMessageParam(role="user", content=texto_usuario),
+        ChatCompletionSystemMessageParam(role="system", content=texto_usuario),
+        ChatCompletionUserMessageParam(role="user", content=prompt_sistema)
     ]
 
     respuesta = client.chat.completions.create(
@@ -153,9 +153,9 @@ def extraer_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
     )
 
     datos = json.loads(respuesta.choices[0].message.content)
-    return ConsultaGastoFijo(**datos)
+    return ExtraccionGastoFijo.model_validate_json(respuesta.choices[0].message.content)
 
-def extraer_consulta_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
+def extraer_consulta_gasto_fijo(texto_usuario: str) -> ConsultaGastoFijo:
     """
     Analiza 'cuando debo pagar el prestamo del BHD? -> termino = BHD.
     """
@@ -169,14 +169,14 @@ def extraer_consulta_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
     }
 
     Reglas:
-    - "termino" es la palabra mas distintiva del pago: "cuando pago el prestamo del BHD" -> "bhd". "cuando se cobra Netflix" -> "netflix.
+    - "termino" es la palabra mas distintiva del pago: "cuando pago el prestamo del BHD" -> "bhd". "cuando se cobra Netflix" -> "netflix".
     - Si la pregunta es general ("cuales son mis pagos fijos?", "que debo pagar este mes?") -> termino = null y categoria = null.
-    - Si pregunta por un grupo ("mis suscripciones", "mis pagos") -> termibo = null y categoria = esa categoria.
+    - Si pregunta por un grupo ("mis suscripciones", "mis pagos") -> termino = null y categoria = esa categoria.
     - NUNCA inventes un termino si el usuario no nombro nada especifico."""
 
     messages = [
-        ChatCompletionUserMessageParam(role="system", content=prompt_sistema),
-        ChatCompletionSystemMessageParam(role="user", content=texto_usuario),
+        ChatCompletionSystemMessageParam(role="system", content=texto_usuario),
+        ChatCompletionUserMessageParam(role="user", content=prompt_sistema)
     ]
 
     respuesta = client.chat.completions.create(
@@ -187,7 +187,3 @@ def extraer_consulta_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
 
     datos = json.loads(respuesta.choices[0].message.content)
     return ConsultaGastoFijo(**datos)
-
-if __name__ == "__main__":
-    resultado = extraer_gasto("gasté 200 pesos en comida hoy")
-    print(resultado)
