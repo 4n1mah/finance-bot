@@ -78,5 +78,5 @@ def responder_gasto_fijo(
     lineas = [_formatear_gasto_fijo(gf) for gf in fijos]
     total = sum(float(gf.monto) for gf in fijos)
 
-    return f"{titulo}\n" + "\n" .join(lineas) + f"\n\nTotal mensual: *RD${total:.,2f}*"
+    return f"{titulo}\n" + "\n" .join(lineas) + f"\n\nTotal mensual: *RD${total:,.2f}*"
 
