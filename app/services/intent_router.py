@@ -22,7 +22,7 @@ PALABRAS_RECURRENCIA = [
 ]
 
 PALABRAS_PREGUNTA_FIJO = [
-    "cuando pago", "cuándo pago", "cuando debo pagar", "cuánto debo pagar", 
+    "cuando pago", "cuándo pago", "cuando debo pagar", "cuándo debo pagar", 
     "cuando me toca", "cuándo me toca", "cuando se cobra", "cuándo se cobra",
     "proximo pago", "próximo pago", "pagos fijos", "mis suscripciones", 
     "que debo pagar", "qué debo pagar"
