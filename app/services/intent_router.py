@@ -1,7 +1,7 @@
 from enum import Enum
 import re
 from typing import Optional
-from app.models.gasto import CategoriaGasto
+from app.models.categorias import CategoriaGasto
 
 class Intencion(str, Enum):
     """

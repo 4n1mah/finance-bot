@@ -1,7 +1,7 @@
 import calendar
 from datetime import datetime, timedelta, timezone, date
 
-OFFSET_RD = timezone(timedelta(hours=4))
+TZ_LOCAL = timezone(timedelta(hours=-4))
 
 def _dia_efectivo(anio: int, mes: int, dia_mes: int) -> int:
     """
@@ -17,7 +17,7 @@ def calcular_proxima_fecha(dia_mes: int, hoy: date | None = None) -> date:
     Si ya paso, es el mes siguiente.
     """ 
     if hoy is None:
-        hoy = datetime.now(OFFSET_RD).date()
+        hoy = datetime.now(TZ_LOCAL).date()
 
     dia = _dia_efectivo(hoy.year, hoy.month, dia_mes)
     candidata = date(hoy.year, hoy.month, dia)
@@ -37,5 +37,5 @@ def dias_restantes(dia_mes: int, hoy: date | None = None) -> int:
     Cuantos dias faltan para el proximo pago.
     """
     if hoy is None:
-        hoy = datetime.now(OFFSET_RD).date()
+        hoy = datetime.now(TZ_LOCAL).date()
     return (calcular_proxima_fecha(dia_mes, hoy) - hoy).days

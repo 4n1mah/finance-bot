@@ -10,8 +10,8 @@ from app.repositories.gasto_repository import (
     obtener_gastos_detalle,
     obtener_total_por_categoria
 )
+from app.services.date_utils import TZ_LOCAL
 
-TZ_LOCAL = timezone(timedelta(hours=-4))
 UTC = timezone.utc
 
 

@@ -26,7 +26,7 @@ def _resolver_usuario(db: Session, numero_whatsapp: str, nombre: str) -> Usuario
 
 def _formatear_confirmacion(gasto: Gasto) -> str:
     return (
-        f"✅ Gasto registrado: *RD${gasto.monto}* en {gasto.categoria.value} "
+        f"✅ Gasto registrado: *RD${float(gasto.monto):,.2f}* en {gasto.categoria.value} "
         f"({gasto.descripcion})"
     )
 
@@ -36,7 +36,7 @@ def _formatear_confirmacion_fijo(gf) -> str:
     return (
         f"📍 Pago fijo registrado: *RD${float(gf.monto):,.2f}* - {gf.descripcion} "
         f"({gf.categoria.value})\n"
-        f"Se paga el *{gf.dia_mes} de cada mes*."
+        f"Se paga el *{gf.dia_mes} de cada mes*. "
         f"Próximo: {fecha.strftime('%d/%m/%Y')} (faltan {dias} días)."
     )
 

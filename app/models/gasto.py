@@ -3,18 +3,7 @@ from app.core.database import Base
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime, UTC
-
-class CategoriaGasto(enum.Enum):
-    COMIDA = "comida"
-    PASAJE = "pasaje"
-    CUIDADO_PERSONAL = "cuidado_personal"
-    SERVICIOS = "servicios"
-    SALUD = "salud"
-    SALIDAS = "salidas"
-    AHORROS = "ahorros"
-    PEDIDOS = "pedidos"
-    PAGOS = "pagos"
-    OTROS = "otros"
+from app.models.categorias import CategoriaGasto
 
 class Gasto(Base):
     __tablename__ = "gastos"
