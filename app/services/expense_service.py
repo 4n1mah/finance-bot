@@ -5,8 +5,7 @@ from app.repositories.gasto_repository import crear_gasto
 from app.repositories.gasto_fijo_repository import crear_gasto_fijo
 from app.services.gasto_fijo_service import responder_gasto_fijo
 from app.services.date_utils import calcular_proxima_fecha, dias_restantes
-from app.integrations.groq_client import (
-    extraer_gasto, 
+from app.integrations.groq_client import ( 
     extraer_consulta, 
     extraer_gastos,
     extraer_gasto_fijo,
