@@ -76,8 +76,10 @@ def detectar_intenciones(texto_usuario: str) -> list[Intencion]:
         intenciones.append(Intencion.PREGUNTA)
 
     tiene_palabra_gasto = any(palabra in texto_normalizado for palabra in PALABRAS_GASTO)
+    texto_sin_dias = re.sub(r"\b(el|dia|día)\s+\d{1,2}\b", "", texto_normalizado)
+    contiene_monto = bool(re.search(r"\d", texto_sin_dias))
 
-    if contiene_digito and (tiene_palabra_gasto or not es_pregunta):
+    if contiene_monto and (tiene_palabra_gasto or not es_pregunta):
         intenciones.append(Intencion.REGISTRAR_GASTO)
         
     return intenciones

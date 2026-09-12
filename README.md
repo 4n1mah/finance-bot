@@ -165,7 +165,23 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-Hoy cubren `date_utils` (cálculo de la próxima fecha de cobro de un gasto fijo): mismo mes, cambio de mes, cambio de año, meses cortos y años bisiestos. Las funciones reciben la fecha de "hoy" como parámetro, así los tests no dependen del reloj y dan el mismo resultado cualquier día. No necesitan base de datos ni variables de entorno.
+Qué cubren:
+
+| Archivo | Qué prueba |
+|---|---|
+| `test_date_utils.py` | Próxima fecha de cobro de un gasto fijo: mismo mes, cambio de mes y de año, meses cortos y años bisiestos |
+| `test_intent_router.py` | Detección de intenciones (gasto, pregunta, saludo, gasto fijo, combinaciones) y de categoría directa |
+| `test_query_service.py` | Normalización de texto, rangos de cada periodo, conversión UTC ↔ hora local, totales, desgloses y búsqueda por descripción |
+| `test_gasto_fijo_service.py` | Listado de pagos fijos ordenado por el más cercano, filtros por término y categoría, desactivación |
+| `test_expense_service.py` | Flujo completo de `procesar_mensaje`: registro de uno o varios gastos, gastos fijos, preguntas y errores de extracción |
+| `test_webhook.py` | Verificación del token de Meta, procesamiento de mensajes, duplicados y eventos que se ignoran |
+
+Los tests no dependen de servicios externos:
+
+- **Base de datos**: cada test usa una base SQLite en memoria nueva (fixture `db` en `tests/conftest.py`), así que no hace falta Postgres.
+- **Groq y WhatsApp**: se reemplazan con `monkeypatch` por respuestas controladas; ningún test sale a internet.
+- **Variables de entorno**: `conftest.py` define valores falsos antes de importar la app, por lo que no se necesita `.env` y nunca se lee el real.
+- **Reloj**: las fechas se congelan (o se pasan como parámetro), así que dan el mismo resultado cualquier día.
 
 ---
 
@@ -190,12 +206,12 @@ Se usó de forma activa durante unos 2 meses para llevar mis gastos reales. Actu
 - La deduplicación de mensajes vive en memoria del proceso (se pierde al reiniciar y no se comparte entre instancias).
 - El mensaje se procesa dentro del request del webhook, así que Meta espera a que terminen las llamadas a Groq y a la base antes de recibir su respuesta.
 - La zona horaria está fija en UTC-4.
-- Los tests solo cubren `date_utils` por ahora.
+- Las llamadas reales a Groq no tienen tests: en la suite se simulan, así que un cambio en los prompts o en el modelo no se detecta automáticamente.
 
 ## Roadmap
 
 - [x] Tests con pytest sobre `date_utils`
-- [ ] Tests con pytest sobre `intent_router`
+- [x] Tests con pytest sobre `intent_router`, servicios y webhook
 - [ ] Validación de la firma `X-Hub-Signature-256` de Meta en el webhook
 - [ ] Migraciones con Alembic
 - [ ] Procesamiento en background para responder a Meta de inmediato
