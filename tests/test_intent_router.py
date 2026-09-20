@@ -65,6 +65,38 @@ def test_preguntas_de_gasto_fijo(texto):
     assert detectar_intenciones(texto) == [Intencion.PREGUNTA_GASTO_FIJO]
 
 
+@pytest.mark.parametrize("texto", [
+    # Decia "gastos fijos" y la lista solo contemplaba "pagos fijos".
+    "Cuales son mis gastos fijos?",
+    "cuales son mis gastos fijos",
+    # "cuando es" no estaba en la lista, asi que caia en PREGUNTA y el bot
+    # contestaba con el total del mes a una pregunta sobre una fecha.
+    "Cuando es el prestamo?",
+    "¿Cuándo es el préstamo?",
+    "cuando vence la renta",
+    "cuando me cobran netflix",
+    "proximos pagos",
+    "que tengo que pagar este mes",
+])
+def test_preguntas_de_gasto_fijo_que_antes_caian_en_consulta(texto):
+    assert detectar_intenciones(texto) == [Intencion.PREGUNTA_GASTO_FIJO]
+
+
+def test_cuanto_no_se_confunde_con_cuando():
+    # Se diferencian en una sola letra, pero preguntan cosas distintas:
+    # "cuanto" pide un monto, "cuando" una fecha.
+    assert detectar_intenciones("cuanto llevo gastado?") == [Intencion.PREGUNTA]
+
+
+@pytest.mark.parametrize("con_acento, sin_acento", [
+    ("¿Cuánto gasté?", "cuanto gaste?"),
+    ("¿Cuándo pago el préstamo?", "cuando pago el prestamo?"),
+    ("Compré algo por 200", "compre algo por 200"),
+])
+def test_los_acentos_no_cambian_la_intencion(con_acento, sin_acento):
+    assert detectar_intenciones(con_acento) == detectar_intenciones(sin_acento)
+
+
 def test_pregunta_de_gasto_fijo_gana_sobre_recurrencia():
     # Tiene "cada mes" y un numero, pero es una pregunta: no debe registrar nada.
     intenciones = detectar_intenciones("cuando pago lo de cada mes del dia 5")
