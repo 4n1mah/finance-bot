@@ -1,0 +1,38 @@
+# Blueprint de Render (Infrastructure as Code).
+# Con este archivo en la raiz, Render crea el servicio con esta configuracion
+# en vez de tener que llenarla a mano en el panel.
+#
+# La region deberia coincidir con la de la base en Neon para no pagar latencia
+# en cada query. Ohio es la region por defecto de Neon; si tu proyecto esta en
+# otra, cambia esta linea.
+services:
+  - type: web
+    name: finance-bot
+    runtime: python
+    plan: free
+    region: ohio
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+    # Apunta a "/" y NO a "/health" a proposito. El healthcheck de Render corre
+    # cada pocos segundos y reinicia la instancia si falla: si apuntara a
+    # "/health", que hace SELECT 1, cada chequeo despertaria la base en Neon y
+    # se comeria las 100 CU-horas gratis del mes. Ademas, si la base se cae,
+    # reiniciar el proceso no la arregla: solo dejaria el servicio en un ciclo
+    # de reinicios. "/" confirma lo unico que Render necesita saber, que el
+    # proceso esta vivo y responde. "/health" sigue existiendo para diagnostico.
+    healthCheckPath: /
+
+    # sync: false = Render los pide al crear el servicio y los guarda cifrados;
+    # nunca viajan en el repositorio.
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: META_VERIFY_TOKEN
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_PHONE_NUMBER_ID
+        sync: false

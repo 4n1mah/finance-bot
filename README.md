@@ -54,7 +54,7 @@ El usuario le escribe al bot por WhatsApp en texto libre — sin formularios, si
 | Base de datos | PostgreSQL en Neon |
 | Mensajería | Meta WhatsApp Business API (Graph API v25.0) |
 | Tests | pytest |
-| Deploy | Koyeb (instancia free) |
+| Deploy | Render (plan free) |
 
 ---
 
@@ -187,24 +187,33 @@ Los tests no dependen de servicios externos:
 
 ## Deploy
 
-El bot corre en la **instancia gratuita de Koyeb** (512 MB RAM, 0.1 vCPU, sin tarjeta de crédito). El buildpack detecta el proyecto como Python por el `requirements.txt`, toma la versión del `.python-version` (3.12) y arranca con el comando del `Procfile`:
+El bot corre en el **plan free de Render** (512 MB RAM, 0.1 vCPU, sin tarjeta de crédito). El `render.yaml` de la raíz define el servicio completo, así que Render no hay que configurarlo a mano:
 
-```
-web: uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
-```
-
-El puerto se lee de la variable `PORT` que inyecta la plataforma, con 8000 como valor por defecto si no está definida.
+| Ajuste | Valor |
+|---|---|
+| Build | `pip install -r requirements.txt` |
+| Arranque | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Versión de Python | `.python-version` → 3.12 |
+| Healthcheck | `/` |
 
 Pasos para desplegar:
 
-1. Crear cuenta en [app.koyeb.com](https://app.koyeb.com) (login con GitHub, sin tarjeta).
-2. **Create Web Service** → GitHub → seleccionar este repo y la rama `main`, con builder **Buildpack**.
-3. Elegir el tipo de instancia **Free**.
-4. Cargar las variables de entorno del `.env.example` (el `.env` nunca se sube al repositorio).
-5. En *Health checks*, apuntar el check HTTP a `/health`.
-6. Al terminar el deploy, Koyeb da una URL pública `https://<app>.koyeb.app`. En Meta for Developers, actualizar el webhook a `https://<app>.koyeb.app/webhook` con el mismo `META_VERIFY_TOKEN`.
+1. Crear cuenta en [dashboard.render.com](https://dashboard.render.com) con GitHub (no pide tarjeta).
+2. **New → Blueprint**, seleccionar este repo y la rama `main`. Render lee el `render.yaml` solo.
+3. Render pide las 5 variables marcadas como `sync: false`; completarlas con los valores del `.env.example` (el `.env` nunca se sube al repositorio).
+4. Al terminar, Render da una URL pública `https://<app>.onrender.com`. En Meta for Developers, actualizar el webhook a `https://<app>.onrender.com/webhook` con el mismo `META_VERIFY_TOKEN`.
 
-**Sobre el sleep:** la instancia free se duerme tras ~1 hora sin tráfico y despierta en segundos con la siguiente petición (Meta reintenta la entrega y el webhook deduplica, así que no se pierden mensajes). Si se quiere evitar por completo, un cron gratuito como [cron-job.org](https://cron-job.org) haciendo `GET /health` cada 10 minutos lo mantiene despierto sin costo.
+El `Procfile` se conserva aunque Render no lo use: declara el mismo comando de arranque en el formato que entienden casi todas las plataformas, así mudar el bot a otro host no requiere reconstruirlo.
+
+### Sobre el sleep (y cómo no romper la base haciéndolo)
+
+El plan free se duerme tras **15 minutos** sin tráfico y tarda entre 30 y 60 segundos en despertar. Meta reintenta las entregas y el webhook deduplica por `mensaje_id`, así que un mensaje no se pierde, pero la primera respuesta del día llega tarde.
+
+Para evitarlo, un cron gratuito ([cron-job.org](https://cron-job.org)) puede pedir `GET /` cada 10 minutos. El plan free da 750 horas de instancia al mes y un mes son ~730, así que mantenerlo despierto 24/7 entra en la cuota.
+
+**El cron tiene que pegarle a `/`, nunca a `/health`.** `/health` hace `SELECT 1` contra Neon, y la base solo se suspende tras 5 minutos inactiva. Un ping con query cada 10 minutos la mantendría encendida todo el mes: ~180 CU-horas contra las **100 CU-horas** que da el plan free de Neon. Al pasarse, Neon suspende el proyecto hasta el siguiente ciclo de facturación y el bot queda sin base de datos. `/` no toca la base, así que despierta el web service y deja que Neon siga suspendiéndose sola.
+
+Por la misma razón el healthcheck de Render apunta a `/` y no a `/health`.
 
 ---
 
