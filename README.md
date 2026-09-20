@@ -54,7 +54,7 @@ El usuario le escribe al bot por WhatsApp en texto libre — sin formularios, si
 | Base de datos | PostgreSQL en Neon |
 | Mensajería | Meta WhatsApp Business API (Graph API v25.0) |
 | Tests | pytest |
-| Deploy | Railway |
+| Deploy | Koyeb (instancia free) |
 
 ---
 
@@ -187,13 +187,24 @@ Los tests no dependen de servicios externos:
 
 ## Deploy
 
-El proyecto incluye un `Procfile` para Railway:
+El bot corre en la **instancia gratuita de Koyeb** (512 MB RAM, 0.1 vCPU, sin tarjeta de crédito). El buildpack detecta el proyecto como Python por el `requirements.txt`, toma la versión del `.python-version` (3.12) y arranca con el comando del `Procfile`:
 
 ```
-web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+web: uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
 ```
 
-Las variables de entorno se configuran directamente en el panel de Railway (el `.env` nunca se sube al repositorio). El endpoint `/health` sirve como healthcheck del servicio.
+El puerto se lee de la variable `PORT` que inyecta la plataforma, con 8000 como valor por defecto si no está definida.
+
+Pasos para desplegar:
+
+1. Crear cuenta en [app.koyeb.com](https://app.koyeb.com) (login con GitHub, sin tarjeta).
+2. **Create Web Service** → GitHub → seleccionar este repo y la rama `main`, con builder **Buildpack**.
+3. Elegir el tipo de instancia **Free**.
+4. Cargar las variables de entorno del `.env.example` (el `.env` nunca se sube al repositorio).
+5. En *Health checks*, apuntar el check HTTP a `/health`.
+6. Al terminar el deploy, Koyeb da una URL pública `https://<app>.koyeb.app`. En Meta for Developers, actualizar el webhook a `https://<app>.koyeb.app/webhook` con el mismo `META_VERIFY_TOKEN`.
+
+**Sobre el sleep:** la instancia free se duerme tras ~1 hora sin tráfico y despierta en segundos con la siguiente petición (Meta reintenta la entrega y el webhook deduplica, así que no se pierden mensajes). Si se quiere evitar por completo, un cron gratuito como [cron-job.org](https://cron-job.org) haciendo `GET /health` cada 10 minutos lo mantiene despierto sin costo.
 
 ---
 

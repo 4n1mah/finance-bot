@@ -47,7 +47,7 @@ def health():
     Healthcheck real: que el proceso conteste no significa que el bot funcione,
     porque sin base de datos no puede registrar ni consultar nada. Por eso
     ademas hace un SELECT 1 contra Postgres y devuelve 503 si falla, para que
-    Railway lo marque como caido en vez de darlo por sano.
+    el host (Koyeb) lo marque como caido en vez de darlo por sano.
 
     Por que 'def' y no 'async def': engine.connect() es bloqueante. Declarado
     como sincrono, FastAPI lo corre en un threadpool y no bloquea el event loop.
