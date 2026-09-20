@@ -11,6 +11,11 @@ import json
 
 client = Groq(api_key=settings.groq_api_key)
 
+# Un solo lugar donde vive el nombre del modelo. Estaba repetido en las
+# cuatro llamadas, asi que el dia que Groq lo retiro hubo que cambiarlo en
+# cuatro sitios. Se configura con GROQ_MODEL; ver app/core/config.py.
+MODELO = settings.groq_model
+
 def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
     """
     Analiza una pregunta y extrae tipo, categoria y periodo de tiempo.
@@ -53,7 +58,7 @@ def extraer_consulta(texto_usuario: str) -> ConsultaGasto:
     ]
 
     respuesta = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=MODELO,
         messages=messages,
         response_format={"type": "json_object"},
     )
@@ -79,7 +84,7 @@ def extraer_gastos(texto_usuario: str) -> list[ExtraccionGasto]:
         ChatCompletionUserMessageParam(role="user", content=texto_usuario),
     ]
 
-    respuesta = client.chat.completions.create(model="llama-3.3-70b-versatile",
+    respuesta = client.chat.completions.create(model=MODELO,
                                                messages=messages,
                                                response_format={"type":"json_object"}
                                                )
@@ -116,7 +121,7 @@ def extraer_gasto_fijo(texto_usuario: str) -> ExtraccionGastoFijo:
     ]
 
     respuesta = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=MODELO,
         messages=messages,
         response_format={"type": "json_object"},
     )
@@ -148,7 +153,7 @@ def extraer_consulta_gasto_fijo(texto_usuario: str) -> ConsultaGastoFijo:
     ]
 
     respuesta = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=MODELO,
         messages=messages,
         response_format={"type": "json_object"},
     )

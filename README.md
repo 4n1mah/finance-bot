@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
-![Groq](https://img.shields.io/badge/Groq-llama--3.3--70b-F55036)
+![Groq](https://img.shields.io/badge/Groq-gpt--oss--120b-F55036)
 ![pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)
 
 Bot de WhatsApp para registrar y consultar gastos personales mediante lenguaje natural. Proyecto de portafolio construido con Python y FastAPI.
@@ -48,7 +48,7 @@ El usuario le escribe al bot por WhatsApp en texto libre — sin formularios, si
 | Capa | Tecnología |
 |---|---|
 | API | Python + FastAPI |
-| LLM | Groq (`llama-3.3-70b-versatile`) en modo JSON |
+| LLM | Groq (`openai/gpt-oss-120b`) en modo JSON, configurable con `GROQ_MODEL` |
 | Validación | Pydantic v2 + pydantic-settings |
 | ORM | SQLAlchemy 2.x |
 | Base de datos | PostgreSQL en Neon |
@@ -131,6 +131,11 @@ Copia `.env.example` a `.env` y completa los valores:
 | `META_VERIFY_TOKEN` | Cadena que tú inventas; debe coincidir con la del panel de Meta |
 | `META_ACCESS_TOKEN` | Token de la app de WhatsApp Business en Meta for Developers |
 | `META_PHONE_NUMBER_ID` | ID del número de prueba o producción en Meta |
+| `GROQ_MODEL` | *Opcional.* Modelo de Groq a usar; por defecto `openai/gpt-oss-120b` |
+
+Las cinco primeras son obligatorias y el servicio no arranca sin ellas.
+
+`GROQ_MODEL` existe porque Groq retira modelos cada pocos meses: cuando descontinuó `llama-3.3-70b-versatile` la API empezó a responder `404 model_not_found` y el bot dejó de entender mensajes, aunque el servicio seguía arriba y devolviendo `200`. Teniéndolo como variable, migrar de modelo es editarla en el panel del host, sin tocar código ni esperar un deploy. La lista de modelos vigentes está en [console.groq.com/docs/models](https://console.groq.com/docs/models).
 
 ---
 
